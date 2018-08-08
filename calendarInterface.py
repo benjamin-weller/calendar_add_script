@@ -1,6 +1,6 @@
 """
 Usage:
-    calendarInterface.py write <date_time> <reminder_level>
+    calendarInterface.py write <date_time> <title> [reminder_level]
     calendarInterface.py read [date] [number_limit]
 """
 
@@ -11,6 +11,8 @@ from httplib2 import Http
 from oauth2client import file as oauth_file, client, tools
 from docopt import docopt
 import pyperclip
+from tzlocal import get_localzone
+import maya
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/calendar'
@@ -47,18 +49,18 @@ def read(service_handler, now=None, number_limit=None):
         # print(start, event['summary'])
 
 
-def write(service_handler, maya_time, reminder_level=1):
+def write(service_handler, maya_time, title, reminder_level=1):
 
     event = {
-        'summary': 'Data Structures Assignment - 1',
-        'description': 'Theory Assessment',
+        'summary': f"{title}",
+        'description': '',
         'start': {
-            'dateTime': '2018-03-28T09:17:30+05:30',
-            'timeZone': 'Asia/Kolkata',  # my timezone
+            'dateTime': f"{maya_time}",
+            'timeZone': f"{get_localzone()}",  # my timezone
         },
         'end': {
-            'dateTime': '2018-03-28T17:18:30+05:30',  # 12 midnight is the deadline
-            'timeZone': 'Asia/Kolkata',
+            'dateTime': f"{maya_time}",
+            'timeZone': f"{get_localzone()}",
         },
         'recurrence': [
             'RRULE:FREQ=DAILY;COUNT=1'
@@ -66,25 +68,31 @@ def write(service_handler, maya_time, reminder_level=1):
         'reminders': {
             'useDefault': False,
             'overrides': [
-                {'method': 'email', 'minutes': 24 * 60},  # a day before start
+                {'method': 'popup', 'minutes': 24 * 60},  # a day before start
                 {'method': 'popup', 'minutes': 100},  # 100 minutes before start
             ],
         },
     }
 
-    event = service.events().insert(calendarId='primary', body=event).execute()
+    print(event)
+
+    event = service_handler.events().insert(
+        calendarId='primary', body=event).execute()
     # print 'Event created: %s' % (event.get('htmlLink'))
 
     # I think that maya should handle both the date and the time????
 
 
 if __name__ == '__main__':
+    # TODO add repeat functionality
+    # TODO add time range functionality
     arguments = docopt(__doc__)
     print(arguments)
     service_handler = main()
 
     if arguments["write"]:
-        write(service_handler, arguments["<date_time>"])
+        write(service_handler, maya.when(
+            arguments["<date_time>"]), arguments["<title>"])
     else:
         # Must be a read
         # Figure out how to do the optional params???
