@@ -45,21 +45,23 @@ def read(service_handler, now=None, number_limit=None):
         pyperclip.copy('No upcoming events found.')
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
-        # pyperclip.copy(pyperclip.paste()+f"\n{start} {event["summary"]}")
+        # pyperclip.copy(pyperclip.paste()+f"\n{start} {event['summary']}")
         # print(start, event['summary'])
 
 
 def write(service_handler, maya_time, title, reminder_level=1):
 
+    # I'm giving maya stuff in UTC, and then asking it to keep that hour in utc except make it my time zone, this is backwards
+    # I should make a date time in my current time zone at the time I ask for. I don't want to write a parser though
     event = {
         'summary': f"{title}",
         'description': '',
         'start': {
-            'dateTime': f"{maya_time}",
+            'dateTime': f"{maya_time.datetime(to_timezone=str(get_localzone()), naive=True).isoformat()}",
             'timeZone': f"{get_localzone()}",  # my timezone
         },
         'end': {
-            'dateTime': f"{maya_time}",
+            'dateTime': f"{maya_time.datetime(to_timezone=str(get_localzone()), naive=True).isoformat()}",
             'timeZone': f"{get_localzone()}",
         },
         'recurrence': [
