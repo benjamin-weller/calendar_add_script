@@ -51,17 +51,17 @@ def read(service_handler, now=None, number_limit=None):
 
 def write(service_handler, maya_time, title, reminder_level=1):
 
-    # I'm giving maya stuff in UTC, and then asking it to keep that hour in utc except make it my time zone, this is backwards
+    # I'm giving maya assumes everything is UTC, and then asking it to keep that hour in utc except make it my time zone, this is backwards
     # I should make a date time in my current time zone at the time I ask for. I don't want to write a parser though
     event = {
         'summary': f"{title}",
         'description': '',
         'start': {
-            'dateTime': f"{maya_time.datetime(to_timezone=str(get_localzone()), naive=True).isoformat()}",
+            'dateTime': f"{maya_time.datetime().replace(tzinfo=None).isoformat()}",
             'timeZone': f"{get_localzone()}",  # my timezone
         },
         'end': {
-            'dateTime': f"{maya_time.datetime(to_timezone=str(get_localzone()), naive=True).isoformat()}",
+            'dateTime': f"{maya_time.datetime().replace(tzinfo=None).isoformat()}",
             'timeZone': f"{get_localzone()}",
         },
         'recurrence': [
@@ -87,6 +87,7 @@ def write(service_handler, maya_time, title, reminder_level=1):
 
 if __name__ == '__main__':
     # TODO add repeat functionality
+    # TODO add notification modification functionality
     # TODO add time range functionality
     arguments = docopt(__doc__)
     print(arguments)
