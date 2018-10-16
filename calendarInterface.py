@@ -1,6 +1,6 @@
 """
 Usage:
-    calendarInterface.py write <date_time> <title> [reminder_level]
+    calendarInterface.py write <date_time> <title> [<reminder_level>]
     calendarInterface.py read [date] [number_limit]
 """
 
@@ -43,9 +43,10 @@ def read(service_handler, now=None, number_limit=None):
 
     if not events:
         pyperclip.copy('No upcoming events found.')
+        return
     for event in events:
         start = event['start'].get('dateTime', event['start'].get('date'))
-        # pyperclip.copy(pyperclip.paste()+f"\n{start} {event['summary']}")
+        pyperclip.copy(pyperclip.paste()+f"\n{start} {event['summary']}")
         # print(start, event['summary'])
 
 
@@ -57,6 +58,7 @@ def write(service_handler, maya_time, title, reminder_level=1):
         'summary': f"{title}",
         'description': '',
         'start': {
+            # I've chosen to drop the UTC timezone after maya parses it
             'dateTime': f"{maya_time.datetime().replace(tzinfo=None).isoformat()}",
             'timeZone': f"{get_localzone()}",  # my timezone
         },
@@ -76,14 +78,9 @@ def write(service_handler, maya_time, title, reminder_level=1):
         },
     }
 
-    print(event)
-
     event = service_handler.events().insert(
         calendarId='primary', body=event).execute()
     # print 'Event created: %s' % (event.get('htmlLink'))
-
-    # I think that maya should handle both the date and the time????
-
 
 if __name__ == '__main__':
     # TODO add repeat functionality
