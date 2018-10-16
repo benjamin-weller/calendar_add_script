@@ -1,7 +1,7 @@
 """
 Usage:
     calendarInterface.py write <date_time> <title> [<reminder_level>]
-    calendarInterface.py read [date] [number_limit]
+    calendarInterface.py read [<date>]
 """
 
 from __future__ import print_function
@@ -29,12 +29,7 @@ def main():
     return service
 
 
-def read(service_handler, now=None, number_limit=None):
-    if now == None:
-        now = datetime.datetime.utcnow()
-    if number_limit == None:
-        number_limit = 10
-
+def read(service_handler, now=datetime.datetime.utcnow(), number_limit=10):
     # Call the Calendar API
     events_result = service_handler.events().list(calendarId='primary', timeMin=now,
                                                   maxResults=number_limit, singleEvents=True,
@@ -51,7 +46,6 @@ def read(service_handler, now=None, number_limit=None):
 
 
 def write(service_handler, maya_time, title, reminder_level=1):
-
     # I'm giving maya assumes everything is UTC, and then asking it to keep that hour in utc except make it my time zone, this is backwards
     # I should make a date time in my current time zone at the time I ask for. I don't want to write a parser though
     event = {
@@ -73,7 +67,7 @@ def write(service_handler, maya_time, title, reminder_level=1):
             'useDefault': False,
             'overrides': [
                 {'method': 'popup', 'minutes': 24 * 60},  # a day before start
-                {'method': 'popup', 'minutes': 100},  # 100 minutes before start
+                {'method': 'popup', 'minutes': 60},  # 100 minutes before start
             ],
         },
     }
@@ -85,15 +79,18 @@ def write(service_handler, maya_time, title, reminder_level=1):
 if __name__ == '__main__':
     # TODO add repeat functionality
     # TODO add notification modification functionality
-    # TODO add time range functionality
+    # I want to add two optional parameters to write, the reminder level, and recurrence amount.
+    # With that being said I don't think that I really care enough to add the command line option flags 
+    # just to make this work. Additionally, I've tried to explain how this would complicate things below.
+    # I'm going to leave the above todos, only because as of right now I call them from a .bat file.
+    # this causes issues because I can't "polymorphically" defermine if I'm going to call with or without certain flags.
+
     arguments = docopt(__doc__)
     print(arguments)
     service_handler = main()
 
     if arguments["write"]:
-        write(service_handler, maya.when(
-            arguments["<date_time>"]), arguments["<title>"])
+        write(service_handler, maya.when(arguments["<date_time>"]), arguments["<title>"])
     else:
         # Must be a read
-        # Figure out how to do the optional params???
-        read(service_handler, arguments["date"], arguments["number_limit"])
+        read(service_handler, arguments.get("<date>"))
